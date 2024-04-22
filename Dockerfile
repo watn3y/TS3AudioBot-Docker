@@ -8,7 +8,7 @@ RUN wget -qO- https://github.com/Splamy/TS3AudioBot/releases/latest/download/TS3
 RUN apk update && apk add opus-dev ffmpeg python3 py3-pip
 
 #install yt-dlp
-RUN pip3 install --upgrade yt-dlp
+RUN pip3 install --upgrade --root-user-action=ignore yt-dlp
 
 #symlink yt-dlp to youtube-dl
 RUN ln -s /usr/bin/yt-dlp /usr/bin/youtube-dl

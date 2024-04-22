@@ -6,7 +6,7 @@
 #update yt-dlp as root
 echo "Updating yt-dlp..."
 
-if pip3 install --upgrade yt-dlp >/dev/null ; then
+if pip3 install --upgrade --root-user-action=ignore yt-dlp >/dev/null ; then
     echo yt-dlp is up to date
 else
     RED='\033[0;31m'
