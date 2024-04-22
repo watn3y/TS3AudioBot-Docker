@@ -1,18 +1,14 @@
-FROM python:alpine
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-alpine
 
 WORKDIR /app
 
-RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-wget -qO- https://github.com/Splamy/TS3AudioBot/releases/latest/download/TS3AudioBot_linux_arm64.tar.gz  | tar xvz \
-;elif [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
-wget -qO- https://github.com/Splamy/TS3AudioBot/releases/latest/download/TS3AudioBot_linux_x64.tar.gz | tar xvz \
-;fi
+RUN wget -qO- https://github.com/Splamy/TS3AudioBot/releases/latest/download/TS3AudioBot_dotnetcore3.1.zip | unzip -
 
 # install dependencies
-RUN apk add ffmpeg opus-dev
+RUN apk update && apk add opus-dev ffmpeg python3 py3-pip
 
 #install yt-dlp
-RUN pip3 install yt-dlp
+RUN pip3 install --upgrade yt-dlp
 
 #symlink yt-dlp to youtube-dl
 RUN ln -s /usr/bin/yt-dlp /usr/bin/youtube-dl

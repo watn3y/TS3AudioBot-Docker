@@ -15,4 +15,4 @@ else
 fi
 
 #switch to the correct used and start the bot
-exec su teamspeak3 -c "/usr/bin/dotnet /app/TS3AudioBot.dll --non-interactive"
+exec su teamspeak3 -c "/usr/bin/dotnet /app/TS3AudioBot.dll --non-interactive --stats-disabled"
