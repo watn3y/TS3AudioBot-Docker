@@ -1,0 +1,71 @@
+FROM debian:13-slim
+
+LABEL org.opencontainers.image.title="TS3AudioBot (develop)" \
+    org.opencontainers.image.description="Automated Docker builds of the TS3AudioBot develop branch (.NET 6) with support for arm64 and including more dependencies." \
+    org.opencontainers.image.authors="watn3y <me@watn3y.de>" \
+    org.opencontainers.image.vendor="watn3y.de" \
+    org.opencontainers.image.documentation="https://git.watn3y.de/watn3y/TS3AudioBot-Docker/src/branch/master/README.md" \
+    org.opencontainers.image.url="https://git.watn3y.de/watn3y/TS3AudioBot-Docker" \
+    org.opencontainers.image.source="https://git.watn3y.de/watn3y/TS3AudioBot-Docker" \
+    org.opencontainers.image.licenses="OSL-3.0" \
+    org.opencontainers.image.base.name="docker.io/library/debian:13-slim"
+
+ARG TARGETARCH
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+WORKDIR /app
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libopus0 \
+    libicu76 \
+    ffmpeg \
+    python3 \
+    python3-pip \
+    ca-certificates \
+    wget \
+    xz-utils \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/* \
+    # TS3AudioBot loads Opus by the bare name "libopus"; Debian ships only libopus.so.0.
+    && ln -sf "$(find / -name 'libopus.so.0' 2>/dev/null | head -n1)" \
+    "$(dirname "$(find / -name 'libopus.so.0' 2>/dev/null | head -n1)")/libopus.so"
+
+# Debian 13's Python 3.13 satisfies yt-dlp-ejs / curl_cffi (>= 3.10), so install
+# into the system interpreter. --break-system-packages is required by PEP 668.
+RUN pip3 install --break-system-packages --no-cache-dir \
+    yt-dlp \
+    yt-dlp-ejs \
+    curl_cffi \
+    && ln -s "$(command -v yt-dlp)" /usr/local/bin/youtube-dl
+
+# Deno is the JS runtime used by yt-dlp-ejs to solve YouTube's JS challenges.
+RUN case "${TARGETARCH}" in \
+    amd64) DENO_ARCH="x86_64-unknown-linux-gnu" ;; \
+    arm64) DENO_ARCH="aarch64-unknown-linux-gnu" ;; \
+    *) echo "Deno has no prebuilt binary for TARGETARCH=${TARGETARCH}" >&2; exit 1 ;; \
+    esac \
+    && wget -qO /tmp/deno.zip "https://github.com/denoland/deno/releases/latest/download/deno-${DENO_ARCH}.zip" \
+    && unzip -o /tmp/deno.zip -d /usr/local/bin \
+    && rm /tmp/deno.zip \
+    && chmod +x /usr/local/bin/deno
+
+RUN case "${TARGETARCH}" in \
+    amd64) TS3AB_BRANCH="develop_linux_x64" ;; \
+    arm64) TS3AB_BRANCH="develop_linux_arm64" ;; \
+    *) echo "No TS3AudioBot nightly build for TARGETARCH=${TARGETARCH}" >&2; exit 1 ;; \
+    esac \
+    && wget -qO- "https://splamy.de/api/nightly/projects/ts3ab/${TS3AB_BRANCH}/download" \
+    | tar xz -C /app \
+    && chmod +x /app/TS3AudioBot
+
+WORKDIR /app/data
+RUN useradd --no-create-home --uid 9999 teamspeak3 \
+    && chown -R teamspeak3 /app/data
+
+USER teamspeak3
+
+ENTRYPOINT [ "/app/TS3AudioBot" ]
+CMD ["--non-interactive", "--stats-disabled"]
