@@ -1,7 +1,7 @@
 FROM debian:13-slim
 
-LABEL org.opencontainers.image.title="TS3AudioBot" \
-    org.opencontainers.image.description="Automated Docker builds of the TS3AudioBot (develop branch) with support for arm64 and including more dependencies." \
+LABEL org.opencontainers.image.title="TS3AudioBot (develop)" \
+    org.opencontainers.image.description="Automated Docker builds of the TS3AudioBot develop branch (.NET 6) with support for arm64 and including more dependencies." \
     org.opencontainers.image.authors="watn3y <me@watn3y.de>" \
     org.opencontainers.image.vendor="watn3y.de" \
     org.opencontainers.image.documentation="https://git.watn3y.de/watn3y/TS3AudioBot-Docker/src/branch/master/README.md" \
@@ -33,14 +33,15 @@ RUN apt-get update \
     && ln -sf "$(find / -name 'libopus.so.0' 2>/dev/null | head -n1)" \
     "$(dirname "$(find / -name 'libopus.so.0' 2>/dev/null | head -n1)")/libopus.so"
 
-
+# Debian 13's Python 3.13 satisfies yt-dlp-ejs / curl_cffi (>= 3.10), so install
+# into the system interpreter. --break-system-packages is required by PEP 668.
 RUN pip3 install --break-system-packages --no-cache-dir \
     yt-dlp \
     yt-dlp-ejs \
     curl_cffi \
     && ln -s "$(command -v yt-dlp)" /usr/local/bin/youtube-dl
 
-
+# Deno is the JS runtime used by yt-dlp-ejs to solve YouTube's JS challenges.
 RUN case "${TARGETARCH}" in \
     amd64) DENO_ARCH="x86_64-unknown-linux-gnu" ;; \
     arm64) DENO_ARCH="aarch64-unknown-linux-gnu" ;; \

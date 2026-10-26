@@ -1,7 +1,7 @@
 FROM debian:11-slim
 
 LABEL org.opencontainers.image.title="TS3AudioBot" \
-    org.opencontainers.image.description="Automated Docker builds of TS3AudioBot (master branch) with support for arm64 and including more dependencies." \
+    org.opencontainers.image.description="Automated Docker builds of TS3AudioBot with support for arm64 and including more dependencies." \
     org.opencontainers.image.authors="watn3y <me@watn3y.de>" \
     org.opencontainers.image.vendor="watn3y.de" \
     org.opencontainers.image.documentation="https://git.watn3y.de/watn3y/TS3AudioBot-Docker/src/branch/master/README.md" \
@@ -52,7 +52,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
     && ln -s "${VIRTUAL_ENV}/bin/yt-dlp" /usr/local/bin/youtube-dl \
     && chmod -R a+rX /opt/uv-python /opt/venv
 
-
+# Deno is the JS runtime used by yt-dlp-ejs to solve YouTube's JS challenges.
 RUN case "${TARGETARCH}" in \
     amd64) DENO_ARCH="x86_64-unknown-linux-gnu" ;; \
     arm64) DENO_ARCH="aarch64-unknown-linux-gnu" ;; \

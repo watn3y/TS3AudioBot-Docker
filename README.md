@@ -2,7 +2,7 @@
 
 Automated Docker builds of [TS3AudioBot](https://github.com/Splamy/TS3AudioBot) with support for arm64 and including more dependencies.
 
-This image gets built from the nightly master branch build at [splamy.de](https://splamy.de/nightly) daily.
+This image gets built from the nightly master and develop branch builds at [splamy.de](https://splamy.de/nightly) every day.
 
 > [!IMPORTANT]  
 > The version of this repository you are seeing is likely a mirror.
@@ -18,15 +18,33 @@ The Docker image is available on these registries.
 
 ### Example compose file
 
+> [!NOTE]  
+> If you are running a TeamSpeak6 Server, use the :develop tag. :master is unsupported and will not connect.
+> 
+> See [this issue](https://github.com/Splamy/TS3AudioBot/issues/1076#issuecomment-3957894137) for more info.
+
 ```yaml
 services:
-  TS3AudioBot:
+  ts3audiobot:
     image: watn3y/ts3audiobot:master
-    container_name: TS3AudioBot
+    # image: watn3y/ts3audiobot:develop # Use this to be up to date with the develop branch at https://github.com/Splamy/TS3AudioBot/tree/develop
+    container_name: ts3audiobot
     restart: unless-stopped
+    # ports: # Uncomment this to serve the WebUI
+    #   - 58913:58913
     volumes:
-      - <yourPath>/data:/app/data
+      - <yourPath>:/app/data # make sure this directory is owned by uid 9999 (chown 9999 <yourPath>)
 ```
+
+### Bootstrapping your config
+
+Use this command to generate a new config for your bot.
+
+```bash
+docker run --rm -it -v <yourPath>:/app/data watn3y/ts3audiobot:master -
+```
+
+Again, make sure that <yourPath> is owned by uid 9999. 
 
 ## Credits and support
 
